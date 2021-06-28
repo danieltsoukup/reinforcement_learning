@@ -59,7 +59,7 @@ class QueueAccessControl(Env):
         """Move the queue pointer and return the next customer.
 
         Returns:
-            int: [description]
+            int: element of the queue at the new pointer position
         """
         assert (
             len(self.queue) > self.current_customer_pointer
@@ -74,28 +74,28 @@ class QueueAccessControl(Env):
 
         return current_customer
 
-    def step(self, action) -> None:
+    def step(self, action) -> Tuple[np.ndarray, float, bool, dict]:
+        """Takes the given action, updates and returns the state with
+        the reward, indicator if the episode is done and an info dictionary.
+        """
         err_msg = "%r (%s) invalid" % (action, type(action))
         assert self.action_space.contains(action), err_msg
 
         info = {"current_customer": self.current_customer}
 
-        next_customer = self.move_pointer()
-
         if action == type(self).REJECT_ACTION or self.num_free_servers == 0:
             reward = 0
-            self.current_customer = next_customer
 
         elif action == type(self).ACCEPT_ACTION:
             reward = self.customer_rewards[self.current_customer]
             self.num_free_servers -= 1
-            self.current_customer = next_customer
 
-        self.state = np.array([self.num_free_servers, self.current_customer])
-
-        done = self.is_done()
+        self.current_customer = self.move_pointer()
+        self.state = self.build_state()
 
         self.unlock_servers()
+
+        done = self.is_done()
 
         return self.state, reward, done, info
 
