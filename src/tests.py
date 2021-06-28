@@ -35,18 +35,17 @@ def test_queueenv_reset_statecheck(queue_env):
     assert state_shape_check and server_num_check and customer_check
 
 
-def test_queueenv_reset_queuecheck(queue_env):
+def test_queueenv_reset_pointer_check(queue_env):
     _ = queue_env.reset()
-    queue_length_check = len(queue_env.queue) == queue_env.queue_size - 1
 
-    assert queue_length_check
+    assert queue_env.current_customer_pointer == 1
 
 
 def test_step_queue(queue_env):
     _ = queue_env.reset()
     state, reward, done, info = queue_env.step(0)
 
-    assert len(queue_env.queue) == queue_env.queue_size - 2
+    assert queue_env.current_customer_pointer == 2
 
 
 def test_step_queue_reward(queue_env, customer_rewards):

@@ -53,16 +53,26 @@ class QueueAccessControl(Env):
         self.current_customer = None
         self.state = None
         self.queue = None
+        self.current_customer_pointer = None
 
-    def get_current_customer(self) -> int:
-        return self.state[1]
+    def move_pointer(self) -> int:
+        """Move the queue pointer and return the next customer.
 
-    def pop_queue(self) -> int:
-        assert len(self.queue) > 0, "Cannot pop empty queue."
+        Returns:
+            int: [description]
+        """
+        assert (
+            len(self.queue) > self.current_customer_pointer
+        ), "Cannot move pointer, at the end of the queue already."
 
-        next_customer, self.queue = self.queue[0], self.queue[1:]
+        self.current_customer_pointer += 1
 
-        return next_customer
+        if self.current_customer_pointer < self.queue_size:
+            current_customer = self.queue[self.current_customer_pointer]
+        else:
+            current_customer = None
+
+        return current_customer
 
     def step(self, action) -> None:
         err_msg = "%r (%s) invalid" % (action, type(action))
@@ -70,7 +80,7 @@ class QueueAccessControl(Env):
 
         info = {"current_customer": self.current_customer}
 
-        next_customer = self.pop_queue()
+        next_customer = self.move_pointer()
 
         if action == type(self).REJECT_ACTION or self.num_free_servers == 0:
             reward = 0
@@ -83,11 +93,18 @@ class QueueAccessControl(Env):
 
         self.state = np.array([self.num_free_servers, self.current_customer])
 
-        done = len(self.queue) == 0
+        done = self.is_done()
 
         self.unlock_servers()
 
         return self.state, reward, done, info
+
+    def is_done(self) -> bool:
+        """
+        Check if the episode ended by moving past the last queue element.
+        """
+
+        return self.current_customer_pointer == self.queue_size
 
     def unlock_servers(self) -> None:
         """Unlock each occupied server with the given probability."""
@@ -108,9 +125,14 @@ class QueueAccessControl(Env):
         self.queue = np.random.choice(
             self.num_customer_types, p=self.customer_probs, size=self.queue_size
         )
-
+        self.current_customer_pointer = 0
         self.num_free_servers = self.num_servers
-        self.current_customer = self.pop_queue()
-        self.state = np.array([self.num_free_servers, self.current_customer])
+
+        self.current_customer = self.move_pointer()
+
+        self.state = self.build_state()
 
         return self.state
+
+    def build_state(self) -> np.ndarray:
+        return np.array([self.num_free_servers, self.current_customer])
