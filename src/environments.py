@@ -14,6 +14,7 @@ class QueueAccessControl(Env):
         customer_rewards: List[int],
         customer_probs: List[float],
         queue_size: int,
+        unlock_proba: float,
     ) -> None:
         """
         Queue Access Control Environment
@@ -37,6 +38,7 @@ class QueueAccessControl(Env):
         self.num_customer_types = len(self.customer_rewards)
         self.customer_probs = customer_probs
         self.queue_size = queue_size
+        self.unlock_proba = unlock_proba
 
         self.action_space: Space = Discrete(2)
         self.observation_space: Space = TupleSpace(
@@ -47,6 +49,8 @@ class QueueAccessControl(Env):
             max(customer_rewards),
         )
 
+        self.num_free_servers = None
+        self.current_customer = None
         self.state = None
         self.queue = None
 
@@ -54,39 +58,59 @@ class QueueAccessControl(Env):
         return self.state[1]
 
     def pop_queue(self) -> int:
+        assert len(self.queue) > 0, "Cannot pop empty queue."
+
         next_customer, self.queue = self.queue[0], self.queue[1:]
 
         return next_customer
-
-    def get_num_free_servers(self) -> int:
-        return self.state[0]
 
     def step(self, action) -> None:
         err_msg = "%r (%s) invalid" % (action, type(action))
         assert self.action_space.contains(action), err_msg
 
-        num_free_servers = self.get_num_free_servers()
-        current_customer = self.get_current_customer()
+        info = {"current_customer": self.current_customer}
+
         next_customer = self.pop_queue()
 
-        if action == type(self).REJECT_ACTION or num_free_servers == 0:
+        if action == type(self).REJECT_ACTION or self.num_free_servers == 0:
             reward = 0
-            self.state = np.array([num_free_servers, next_customer])
+            self.current_customer = next_customer
+
         elif action == type(self).ACCEPT_ACTION:
-            reward = self.customer_rewards[current_customer]
-            self.state = np.array([num_free_servers - 1, next_customer])
+            reward = self.customer_rewards[self.current_customer]
+            self.num_free_servers -= 1
+            self.current_customer = next_customer
+
+        self.state = np.array([self.num_free_servers, self.current_customer])
 
         done = len(self.queue) == 0
-        info = {}
+
+        self.unlock_servers()
 
         return self.state, reward, done, info
 
+    def unlock_servers(self) -> None:
+        """Unlock each occupied server with the given probability."""
+
+        num_locked_servers = self.num_servers - self.num_free_servers
+        num_unlock = np.random.choice(
+            2, size=num_locked_servers, p=[1 - self.unlock_proba, self.unlock_proba]
+        )
+
+        self.num_free_servers += num_unlock.sum()
+
     def reset(self) -> np.ndarray:
+        """Initialize the queue, unlock all servers and setup the state.
+
+        Returns:
+            np.ndarray: state after reset
+        """
         self.queue = np.random.choice(
             self.num_customer_types, p=self.customer_probs, size=self.queue_size
         )
 
-        customer = self.pop_queue()
-        self.state = np.array([self.num_servers, customer])
+        self.num_free_servers = self.num_servers
+        self.current_customer = self.pop_queue()
+        self.state = np.array([self.num_free_servers, self.current_customer])
 
         return self.state

@@ -3,12 +3,19 @@ from src.environments import QueueAccessControl
 
 
 @pytest.fixture
-def queue_env():
+def customer_rewards():
+
+    return [1, 2, 4, 8]
+
+
+@pytest.fixture
+def queue_env(customer_rewards):
     env = QueueAccessControl(
         num_servers=4,
-        customer_rewards=[1, 2, 4, 8],
+        customer_rewards=customer_rewards,
         customer_probs=[0.4, 0.2, 0.2, 0.2],
         queue_size=100,
+        unlock_proba=0.5,
     )
 
     return env
@@ -40,3 +47,19 @@ def test_step_queue(queue_env):
     state, reward, done, info = queue_env.step(0)
 
     assert len(queue_env.queue) == queue_env.queue_size - 2
+
+
+def test_step_queue_reward(queue_env, customer_rewards):
+    _ = queue_env.reset()
+    state, reward, done, info = queue_env.step(1)
+
+    assert reward == customer_rewards[info["current_customer"]]
+
+
+def test_step_done(queue_env):
+    _ = queue_env.reset()
+
+    for _ in range(queue_env.queue_size - 1):
+        state, reward, done, info = queue_env.step(0)
+
+    assert done
