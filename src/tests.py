@@ -38,14 +38,14 @@ def test_queueenv_reset_statecheck(queue_env):
 def test_queueenv_reset_pointer_check(queue_env):
     _ = queue_env.reset()
 
-    assert queue_env.current_customer_pointer == 1
+    assert queue_env.current_customer_pointer == 0
 
 
 def test_step_queue(queue_env):
     _ = queue_env.reset()
     state, reward, done, info = queue_env.step(0)
 
-    assert queue_env.current_customer_pointer == 2
+    assert queue_env.current_customer_pointer == 1
 
 
 def test_step_queue_reward(queue_env, customer_rewards):
@@ -58,7 +58,16 @@ def test_step_queue_reward(queue_env, customer_rewards):
 def test_step_done(queue_env):
     _ = queue_env.reset()
 
-    for _ in range(queue_env.queue_size - 1):
+    for _ in range(queue_env.queue_size):
         state, reward, done, info = queue_env.step(0)
 
     assert done
+
+
+def test_step_not_done(queue_env):
+    _ = queue_env.reset()
+
+    for _ in range(queue_env.queue_size - 1):
+        state, reward, done, info = queue_env.step(0)
+
+    assert not done
