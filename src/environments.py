@@ -54,7 +54,7 @@ class QueueAccessControl(Env):
         self.current_customer_pointer = None
 
     @property
-    def current_customer(self):
+    def current_customer(self) -> int:
         if self.current_customer_pointer < len(self.queue):
             current_customer = self.queue[self.current_customer_pointer]
         else:
@@ -63,7 +63,7 @@ class QueueAccessControl(Env):
         return current_customer
 
     @property
-    def state(self):
+    def state(self) -> np.ndarray:
         return np.array([self.num_free_servers, self.current_customer])
 
     def move_customer_pointer(self) -> int:
@@ -78,7 +78,9 @@ class QueueAccessControl(Env):
 
         self.current_customer_pointer += 1
 
-    def step(self, action) -> Tuple[np.ndarray, float, bool, dict]:
+    def step(
+        self, action: int, unlock: bool = True
+    ) -> Tuple[np.ndarray, float, bool, dict]:
         """Takes the given action, updates and returns the state with
         the reward, indicator if the episode is done and an info dictionary.
         """
@@ -98,7 +100,8 @@ class QueueAccessControl(Env):
 
         self.move_customer_pointer()
 
-        self.unlock_servers()
+        if unlock:
+            self.unlock_servers(self.unlock_proba)
 
         done = self.is_done()
 
@@ -111,12 +114,12 @@ class QueueAccessControl(Env):
 
         return self.current_customer_pointer == self.queue_size
 
-    def unlock_servers(self) -> None:
+    def unlock_servers(self, unlock_probability) -> None:
         """Unlock each occupied server with the given probability."""
 
         num_locked_servers = self.num_servers - self.num_free_servers
         num_unlock = np.random.choice(
-            2, size=num_locked_servers, p=[1 - self.unlock_proba, self.unlock_proba]
+            2, size=num_locked_servers, p=[1 - unlock_probability, unlock_probability]
         )
 
         self.num_free_servers += num_unlock.sum()

@@ -15,7 +15,7 @@ def queue_env(customer_rewards):
         customer_rewards=customer_rewards,
         customer_probs=[0.4, 0.2, 0.2, 0.2],
         queue_size=100,
-        unlock_proba=0.5,
+        unlock_proba=1,
     )
 
     return env
@@ -71,3 +71,38 @@ def test_step_not_done(queue_env):
         state, reward, done, info = queue_env.step(0)
 
     assert not done
+
+
+def test_lock_all(queue_env):
+    _ = queue_env.reset()
+
+    for _ in range(queue_env.num_servers):
+        _ = queue_env.step(1, unlock=False)
+
+    assert queue_env.num_free_servers == 0
+
+
+def test_lock_one(queue_env):
+    _ = queue_env.reset()
+
+    _ = queue_env.step(1, unlock=False)
+
+    assert queue_env.num_free_servers == queue_env.num_servers - 1
+
+
+def test_unlock_one(queue_env):
+    _ = queue_env.reset()
+    _ = queue_env.step(1, unlock=False)
+
+    queue_env.unlock_servers(1)
+
+    assert queue_env.num_free_servers == queue_env.num_servers
+
+
+def test_unlock_zero_proba(queue_env):
+    _ = queue_env.reset()
+    _ = queue_env.step(1, unlock=False)
+
+    queue_env.unlock_servers(0)
+
+    assert queue_env.num_free_servers == queue_env.num_servers - 1
