@@ -1,4 +1,5 @@
-from src.policies import RandomPolicy, Experiment
+from src.policies import RandomPolicy
+from src.experimenter import Experiment
 from gym.core import Env
 from gym.spaces import Discrete, Space
 from typing import Tuple
