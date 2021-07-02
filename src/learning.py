@@ -45,7 +45,7 @@ class MonteCarlo(object):
         while done is False:
             action = self.policy.select_action(state)
 
-            state_action_tuple = (state.tostring(), action)
+            state_action_tuple = (str(state), action)
             is_first_time = first_time_marker.pop(state_action_tuple)
 
             state, reward, done, info = self.environment.step(action)
@@ -56,7 +56,8 @@ class MonteCarlo(object):
     def _update_state_action_values(self) -> None:
         for state_action, reward_list in self.returns.items():
             mean_reward = self._get_mean_reward(reward_list)
-            self.policy.state_action_values[state_action] = mean_reward
+            state, action = state_action
+            self.policy.set_state_action_value(state, action, mean_reward)
 
     def _get_mean_reward(self, reward_list: List[float]) -> float:
         if len(reward_list) > 0:

@@ -54,6 +54,6 @@ def test_experiment(dummy_env):
 
 def test_greedy_choice(dummy_env):
     tabular_policy = TabularGreedyPolicy(dummy_env)
-    tabular_policy.state_action_values[(0, 1)] = 1
+    tabular_policy.set_state_action_value(0, 1, 1)
 
     assert tabular_policy._greedy_action(0) == 1

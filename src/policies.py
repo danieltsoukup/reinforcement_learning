@@ -42,6 +42,10 @@ class TabularGreedyPolicy(Policy):
         super().__init__(environment)
         self.state_action_values = defaultdict(float)
 
+    def set_state_action_value(self, state, action, new_value: float) -> None:
+        state_action_key = (str(state), action)
+        self.state_action_values[state_action_key] = new_value
+
     def select_action(self, state: np.ndarray):
         """With prob eps, returns a random action (explore), or 1-eps prob the greedy action
         using the state-action values.
