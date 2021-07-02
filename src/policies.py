@@ -8,35 +8,80 @@ from collections import defaultdict
 class Policy(object):
     """Base class for control policies."""
 
+    def __init__(self, environment: Env) -> None:
+        self.environment = environment
+
     @abstractmethod
-    def select_action(self, state: Space, environment: Env):
+    def select_action(self, state: Space):
         pass
 
 
 class ConstantPolicy(Policy):
     """Always play the same action."""
 
-    def __init__(self, action) -> None:
+    def __init__(self, environment: Env, action) -> None:
+        super().__init__(environment)
         self.action = action
 
-    def select_action(self, state: Space, environment: Env):
+    def select_action(self, state: Space):
         return self.action
 
 
 class RandomPolicy(Policy):
-    def select_action(self, state: Space, environment: Env):
-        return environment.action_space.sample()
-
-
-class TabularEpsilonGreedyPolicy(Policy):
-    """Base class for table based control policies."""
-
-    def __init__(self, enviroment: Env, eps: float) -> None:
-        self.environment = enviroment
-        self.state_action_values = defaultdict(float)
-        self.eps = eps
+    def __init__(self, environment: Env) -> None:
+        super().__init__(environment)
 
     def select_action(self, state: Space):
+        return self.environment.action_space.sample()
+
+
+class TabularGreedyPolicy(Policy):
+    """Base class for table based control policies."""
+
+    def __init__(self, environment: Env) -> None:
+        super().__init__(environment)
+        self.state_action_values = defaultdict(float)
+
+    def select_action(self, state: np.ndarray):
+        """With prob eps, returns a random action (explore), or 1-eps prob the greedy action
+        using the state-action values.
+        """
+
+        return self._greedy_action(state)
+
+    def _greedy_action(self, state: np.ndarray):
+        """
+        Returns the action with the highest value for the state.
+
+        If no action has a recorded value for the state, we select a random action.
+        """
+
+        all_state_action_values = self.state_action_values.items()
+        current_state_action_values = [
+            item for item in all_state_action_values if item[0][0] == str(state)
+        ]
+
+        if len(current_state_action_values) > 0:
+            best_state_action_value = max(
+                current_state_action_values,
+                key=lambda item: item[1],
+            )
+
+            best_action = best_state_action_value[0][1]
+        else:
+            best_action = self.environment.action_space.sample()
+
+        return best_action
+
+
+class TabularEpsilonGreedyPolicy(TabularGreedyPolicy):
+    """Epsilon-greedy policy based on state-action values."""
+
+    def __init__(self, environment: Env, eps: float) -> None:
+        super().__init__(environment)
+        self.eps = eps
+
+    def select_action(self, state: np.ndarray):
         """With prob eps, returns a random action (explore), or 1-eps prob the greedy action
         using the state-action values.
         """
@@ -46,15 +91,6 @@ class TabularEpsilonGreedyPolicy(Policy):
         if explore:
             action = self.environment.action_space.sample()
         else:
-            self._greedy_action(state, self.environment)
+            action = self._greedy_action(state, self.environment)
 
         return action
-
-    def _greedy_action(self, state: Space):
-        """Returns the action with the highest value for the state."""
-        best_action = max(
-            self.environment.action_space,
-            key=lambda action: self.state_action_values((state, action)),
-        )
-
-        return best_action

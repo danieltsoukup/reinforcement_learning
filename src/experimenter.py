@@ -15,7 +15,7 @@ class Experiment(object):
 
         rewards = []
         while done is False:
-            action = self.policy.select_action(state, self.environment)
+            action = self.policy.select_action(state)
             state, reward, done, info = self.environment.step(action)
             rewards.append(reward)
 
