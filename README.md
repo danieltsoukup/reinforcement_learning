@@ -12,3 +12,6 @@ Implemented under `QueueAccessControl`, the environment models a set of servers 
 ## Policies
 
 The following policies are implemented.
+
+- `ConstantPolicy`: play the same action regardless of state.
+- `RandomPolicy`: select action randomly.
