@@ -7,21 +7,19 @@ from gym.core import Env
 from typing import List
 
 environment = QueueAccessControl(
-    num_servers=10,
-    customer_rewards=[100, 1],
-    customer_probs=[0.1, 0.9],
+    num_servers=4,
+    customer_rewards=[8, 4, 2, 1],
+    customer_probs=[0.4, 0.2, 0.2, 0.2],
     queue_size=100,
     unlock_proba=0.5,
 )
 
 
 policies = {
-    "always_reject": ConstantPolicy(environment.REJECT_ACTION),
-    "always_accept": ConstantPolicy(environment.ACCEPT_ACTION),
-    "random_action": RandomPolicy(),
+    "always_reject": ConstantPolicy(environment, environment.REJECT_ACTION),
+    "always_accept": ConstantPolicy(environment, environment.ACCEPT_ACTION),
+    "random_action": RandomPolicy(environment),
 }
-
-num_episodes = 1000
 
 
 def evaluate_policies(environment: Env, policies: List[Policy], num_episodes: int):
@@ -37,6 +35,14 @@ def evaluate_policies(environment: Env, policies: List[Policy], num_episodes: in
 
 if __name__ == "__main__":
     monte_carlo = MonteCarlo(environment)
-    monte_carlo.learn(100)
+    experiment = Experiment(environment, monte_carlo.policy)
 
-    evaluate_policies(environment, {"monte_carlo": monte_carlo.policy}, 100)
+    for _ in range(100):
+        monte_carlo.learn(100)
+
+        rewards = experiment.evaluate(10, n_jobs=-1)
+
+        mean = rewards.mean()
+        low, high = np.quantile(rewards, [0.5, 0.95])
+
+        print(f"{mean} mean reward (90% conf. {low} to {high}).")
