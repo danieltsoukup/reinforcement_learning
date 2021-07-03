@@ -5,19 +5,6 @@ import numpy as np
 from typing import List
 
 
-class FirstTimeMarker(defaultdict):
-    """Utility object to mark if a key was used before."""
-
-    def __init__(self):
-        super().__init__(lambda: True)
-
-    def pop(self, key) -> bool:
-        is_first = self[key]
-        self[key] = False
-
-        return is_first
-
-
 class MonteCarlo(object):
     """Monte Carlo control for tabular state-action value learning.
 
@@ -37,7 +24,7 @@ class MonteCarlo(object):
     def _run_episode(self) -> None:
         """Run a single episode and record rewards after the first occurrance of each state-action pair."""
 
-        first_time_marker = FirstTimeMarker()
+        already_seen = set()
 
         state = self.environment.reset()
         done = False
@@ -46,7 +33,8 @@ class MonteCarlo(object):
             action = self.policy.select_action(state)
 
             state_action_tuple = (str(state), action)
-            is_first_time = first_time_marker.pop(state_action_tuple)
+            is_first_time = state_action_tuple not in already_seen
+            already_seen.add(state_action_tuple)
 
             state, reward, done, info = self.environment.step(action)
 
