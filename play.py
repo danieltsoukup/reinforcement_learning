@@ -27,15 +27,22 @@ if __name__ == "__main__":
         unlock_proba=0.2,
     )
 
+    evaluate_policies(
+        queue_environment,
+        {
+            "always accept": ConstantPolicy(
+                queue_environment, queue_environment.ACCEPT_ACTION
+            )
+        },
+        10,
+    )
+
     monte_carlo = MonteCarlo(queue_environment)
-    experiment = Experiment(queue_environment, monte_carlo.policy)
 
     for _ in range(100):
-        monte_carlo.learn(100)
+        total_rewards = monte_carlo.learn(10)
 
-        rewards = experiment.evaluate(10, n_jobs=-1)
+        mean = total_rewards.mean()
+        low, high = np.quantile(total_rewards, [0.05, 0.95])
 
-        mean = rewards.mean()
-        low, high = np.quantile(rewards, [0.05, 0.95])
-
-        print(f"{mean} mean reward (90% conf. {low} to {high}).")
+        print(f"MC {mean} mean reward (90% conf. {low} to {high}).")

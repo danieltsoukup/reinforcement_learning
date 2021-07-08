@@ -3,6 +3,68 @@ from gym.spaces import Space
 from abc import abstractmethod
 import numpy as np
 from collections import defaultdict
+from typing import Any
+
+
+class StateActionRecord(object):
+    def __init__(self, type_):
+        self.type_ = type_
+        self.record = defaultdict(lambda: defaultdict(self.type_))
+        self.state_string_reverse = dict()
+        self.action_string_reverse = dict()
+
+    def get(self, state: Any, action: Any) -> Any:
+        state_string = self._state_to_string(state)
+        action_string = self._action_to_string(action)
+
+        return self.record[state_string][action_string]
+
+    def set(self, state: Any, action: Any, value: Any) -> None:
+        state_string = self._state_to_string(state)
+        action_string = self._action_to_string(action)
+
+        self.record[state_string][action_string] = value
+
+    def _state_to_string(self, state: Any) -> str:
+        state_string = str(state)
+        if state_string not in self.state_string_reverse.keys():
+            self.state_string_reverse[state_string] = state
+
+        return state_string
+
+    def _action_to_string(self, action: Any) -> str:
+        action_string = str(action)
+        if action_string not in self.action_string_reverse.keys():
+            self.action_string_reverse[action_string] = action
+
+        return action_string
+
+    def get_state_record(self, state: Any) -> defaultdict:
+        state_string = self._state_to_string(state)
+
+        return self.record[state_string]
+
+    def greedy_action(self, state: Any, default_action: Any) -> Any:
+        """
+        Returns the action with the highest value for the state
+        (if no values were entered, the default is returned).
+
+        If no action has a recorded value for the state, we select a random action.
+        """
+
+        state_action_dict = self.get_state_record(state)
+
+        if len(state_action_dict) > 0:
+            best_action_key = max(
+                state_action_dict.keys(),
+                key=lambda key_: state_action_dict[key_],
+            )
+            best_action = self.action_string_reverse[best_action_key]
+
+        else:
+            best_action = default_action
+
+        return best_action
 
 
 class Policy(object):
@@ -40,42 +102,18 @@ class TabularGreedyPolicy(Policy):
 
     def __init__(self, environment: Env) -> None:
         super().__init__(environment)
-        self.state_action_values = defaultdict(float)
+        self.state_action_values = StateActionRecord(float)
 
     def set_state_action_value(self, state, action, new_value: float) -> None:
-        state_action_key = (str(state), action)
-        self.state_action_values[state_action_key] = new_value
+        self.state_action_values.set(state, action, new_value)
 
     def select_action(self, state: np.ndarray):
         """With prob eps, returns a random action (explore), or 1-eps prob the greedy action
         using the state-action values.
         """
+        default_action = self.environment.action_space.sample()
 
-        return self._greedy_action(state)
-
-    def _greedy_action(self, state: np.ndarray):
-        """
-        Returns the action with the highest value for the state.
-
-        If no action has a recorded value for the state, we select a random action.
-        """
-
-        all_state_action_values = self.state_action_values.items()
-        current_state_action_values = [
-            item for item in all_state_action_values if item[0][0] == str(state)
-        ]
-
-        if len(current_state_action_values) > 0:
-            best_state_action_value = max(
-                current_state_action_values,
-                key=lambda item: item[1],
-            )
-
-            best_action = best_state_action_value[0][1]
-        else:
-            best_action = self.environment.action_space.sample()
-
-        return best_action
+        return self.state_action_values.greedy_action(state, default_action)
 
 
 class TabularEpsilonGreedyPolicy(TabularGreedyPolicy):
@@ -95,6 +133,6 @@ class TabularEpsilonGreedyPolicy(TabularGreedyPolicy):
         if explore:
             action = self.environment.action_space.sample()
         else:
-            action = self._greedy_action(state, self.environment)
+            action = self._greedy_action(state)
 
         return action

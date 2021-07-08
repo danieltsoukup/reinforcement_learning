@@ -1,4 +1,4 @@
-from src.policies import RandomPolicy, TabularGreedyPolicy
+from src.policies import RandomPolicy, TabularGreedyPolicy, StateActionRecord
 from src.experimenter import Experiment
 from gym.core import Env
 from gym.spaces import Discrete, Space
@@ -56,4 +56,21 @@ def test_greedy_choice(dummy_env):
     tabular_policy = TabularGreedyPolicy(dummy_env)
     tabular_policy.set_state_action_value(0, 1, 1)
 
-    assert tabular_policy._greedy_action(0) == 1
+    assert tabular_policy.select_action(0) == 1
+
+
+def test_state_action_record_setter_getter():
+    record = StateActionRecord(float)
+    state, action = "state", "action"
+    value = 1
+    record.set(state, action, value)
+
+    assert record.get(state, action) == 1
+
+
+def test_state_action_record_default_getter():
+    record = StateActionRecord(float)
+    state, action = "state", "action"
+    expected_value = 0
+
+    assert record.get(state, action) == expected_value

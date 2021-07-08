@@ -86,17 +86,14 @@ class QueueAccessControl(Env):
         """
         assert self.action_space.contains(action), f"{action} ({type(action)}) invalid."
 
-        info = {
-            "current_customer": self.current_customer,
-            "current_customer_pointer": self.current_customer_pointer,
-        }
+        info = self._get_step_info()
 
         if action == type(self).REJECT_ACTION or self.num_free_servers == 0:
             reward = 0
 
         elif action == type(self).ACCEPT_ACTION:
             reward = self.customer_rewards[self.current_customer]
-            self.num_free_servers -= 1
+            self.lock_servers(1)
 
         self.move_customer_pointer()
 
@@ -107,12 +104,27 @@ class QueueAccessControl(Env):
 
         return self.state, reward, done, info
 
+    def _get_step_info(self):
+        info = {
+            "current_customer": self.current_customer,
+            "current_customer_pointer": self.current_customer_pointer,
+        }
+
+        return info
+
     def is_done(self) -> bool:
         """
         Check if the episode ended by moving past the last queue element.
         """
 
         return self.current_customer_pointer == self.queue_size
+
+    def lock_servers(self, num_servers_to_lock: int) -> None:
+        assert (
+            self.num_free_servers >= num_servers_to_lock
+        ), f"There is not enough servers to lock {num_servers_to_lock}"
+
+        self.num_free_servers -= num_servers_to_lock
 
     def unlock_servers(self, unlock_probability) -> None:
         """Unlock each occupied server with the given probability."""
