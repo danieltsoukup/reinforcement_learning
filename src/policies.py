@@ -12,6 +12,16 @@ class StateActionRecord(object):
         self.record = defaultdict(lambda: defaultdict(self.type_))
         self.state_string_reverse = dict()
         self.action_string_reverse = dict()
+        self.raw_state_actions = []
+
+    def contains(self, state: Any, action: Any) -> bool:
+        state_string = self._state_to_string(state)
+        action_string = self._action_to_string(action)
+
+        check_state = state_string in self.record.keys()
+        check_action = action_string in self.record[state_string].keys()
+
+        return check_action and check_state
 
     def get(self, state: Any, action: Any) -> Any:
         state_string = self._state_to_string(state)
@@ -22,6 +32,9 @@ class StateActionRecord(object):
     def set(self, state: Any, action: Any, value: Any) -> None:
         state_string = self._state_to_string(state)
         action_string = self._action_to_string(action)
+
+        if self.contains(state, action) is False:
+            self.raw_state_actions.append((state, action))
 
         self.record[state_string][action_string] = value
 
@@ -65,6 +78,18 @@ class StateActionRecord(object):
             best_action = default_action
 
         return best_action
+
+
+class StateActionListRecord(StateActionRecord):
+    def __init__(self):
+        super().__init__(list)
+
+    def set(self, state: Any, action: Any, value):
+        """The values are appended to the lists stored for each state-value pair."""
+        state_string = self._state_to_string(state)
+        action_string = self._action_to_string(action)
+
+        self.record[state_string][action_string].append(value)
 
 
 class Policy(object):
@@ -133,6 +158,6 @@ class TabularEpsilonGreedyPolicy(TabularGreedyPolicy):
         if explore:
             action = self.environment.action_space.sample()
         else:
-            action = self._greedy_action(state)
+            action = super().select_action(state)
 
         return action

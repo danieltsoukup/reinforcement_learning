@@ -1,4 +1,9 @@
-from src.policies import RandomPolicy, TabularGreedyPolicy, StateActionRecord
+from src.policies import (
+    RandomPolicy,
+    TabularGreedyPolicy,
+    StateActionRecord,
+    StateActionListRecord,
+)
 from src.experimenter import Experiment
 from gym.core import Env
 from gym.spaces import Discrete, Space
@@ -74,3 +79,13 @@ def test_state_action_record_default_getter():
     expected_value = 0
 
     assert record.get(state, action) == expected_value
+
+
+def test_list_record():
+    record = StateActionListRecord()
+    state, action = "state", "action"
+
+    record.set(state, action, 0)
+    record.set(state, action, 1)
+
+    assert record.get(state, action) == [0, 1]

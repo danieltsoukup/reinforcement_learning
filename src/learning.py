@@ -1,5 +1,10 @@
 from gym.core import Env
-from src.policies import TabularGreedyPolicy, TabularEpsilonGreedyPolicy
+from src.policies import (
+    StateActionListRecord,
+    StateActionRecord,
+    TabularGreedyPolicy,
+    TabularEpsilonGreedyPolicy,
+)
 from collections import defaultdict
 import numpy as np
 from typing import List
@@ -14,7 +19,7 @@ class MonteCarlo(object):
     def __init__(self, environment: Env) -> None:
         self.environment = environment
         self.policy = TabularEpsilonGreedyPolicy(self.environment, 0.5)
-        self.returns = defaultdict(list)
+        self.returns = StateActionListRecord()
 
     def learn(self, num_episodes: int) -> np.ndarray:
         """Repeatedly runs episodes and updates the state-action values returning the list of total rewards."""
@@ -38,7 +43,7 @@ class MonteCarlo(object):
         Optionally, the user can provide the first state-action pair.
         """
 
-        already_seen_state_action = set()
+        state_action_first_occurrence_idx = StateActionRecord(int)
         episode_rewards = []
 
         state = self.environment.reset()
@@ -48,6 +53,7 @@ class MonteCarlo(object):
             state = first_state
 
         first_step = True
+        step_count = 0
 
         while done is False:
             if first_step is True and first_action is not None:
@@ -56,23 +62,27 @@ class MonteCarlo(object):
             else:
                 action = self.policy.select_action(state)
 
-            state_action_tuple = (str(state), action)
-            is_first_time = state_action_tuple not in already_seen_state_action
-            already_seen_state_action.add(state_action_tuple)
+            if state_action_first_occurrence_idx.contains(state, action) is False:
+                state_action_first_occurrence_idx.set(state, action, step_count)
 
             state, reward, done, info = self.environment.step(action)
 
             episode_rewards.append(reward)
 
-            if is_first_time is True:
-                self.returns[state_action_tuple].append(reward)
+            step_count += 1
+
+        for state, action in state_action_first_occurrence_idx.raw_state_actions:
+            first_occurrance_idx = state_action_first_occurrence_idx.get(state, action)
+            state_action_return = sum(episode_rewards[first_occurrance_idx:])
+            self.returns.set(state, action, state_action_return)
 
         return np.array(episode_rewards)
 
     def _update_state_action_values(self) -> None:
-        for state_action, reward_list in self.returns.items():
+        for state, action in self.returns.raw_state_actions:
+            reward_list = self.returns.get(state, action)
             mean_reward = self._get_mean_reward(reward_list)
-            state, action = state_action
+
             self.policy.set_state_action_value(state, action, mean_reward)
 
     def _get_mean_reward(self, reward_list: List[float]) -> float:
