@@ -19,7 +19,6 @@ class QueueAccessControl(Env):
         """
         Queue Access Control Environment
 
-        Valid actions:
             0: accept request
             1: reject request
 
@@ -151,3 +150,67 @@ class QueueAccessControl(Env):
         self.current_customer_pointer = 0
 
         return self.state
+
+
+class LineWorld(Env):
+    LEFT_STEP_ACTION = 0
+    RIGHT_STEP_ACTION = 1
+
+    def __init__(self, num_nonterminal_states: int) -> None:
+        super().__init__()
+
+        assert (
+            num_nonterminal_states % 2 == 1
+        ), "Number of non-terminal states must be odd."
+
+        self.num_nonterminal_states = num_nonterminal_states
+        self.terminal_state_left = 0
+        self.terminal_state_right = self.num_nonterminal_states + 1
+        self.start_state = self.num_nonterminal_states // 2 + 1
+
+        self.reward = 1
+
+        self.action_space: Space = Discrete(2)
+        self.observation_space: Space = Discrete(self.num_nonterminal_states + 2)
+        self.reward_range: Tuple[int, int] = (0, 100)
+
+        self._state = None
+
+    @property
+    def state(self) -> int:
+        return self._state
+
+    @state.setter
+    def state(self, value) -> None:
+        assert (
+            0 <= value and value <= self.num_nonterminal_states + 1
+        ), "Value {value} is out of range for state."
+
+        self._state = value
+
+    def reset(self) -> int:
+        """Set state to the middle point."""
+        self.state = self.start_state
+
+        return self.state
+
+    def step(self, action: int) -> Tuple[int, float, bool, dict]:
+        """Step left or right - only reward comes if the right endpoint is reached. The episode terminates at left or right endpoints."""
+
+        if action == type(self).LEFT_STEP_ACTION:
+            self.state -= 1
+        elif action == type(self).RIGHT_STEP_ACTION:
+            self.state += 1
+
+        done = self.is_done()
+        info = {}
+
+        if self.state == self.terminal_state_right:
+            reward = self.reward
+        else:
+            reward = 0
+
+        return self.state, reward, done, info
+
+    def is_done(self) -> bool:
+        return self.state in {self.terminal_state_left, self.terminal_state_right}
