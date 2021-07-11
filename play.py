@@ -56,17 +56,3 @@ if __name__ == "__main__":
         )
 
         monte_carlo.policy.eps *= 0.95
-
-        # if i % 10 == 0:
-
-        #     old_eps = monte_carlo.policy.eps
-
-        #     monte_carlo.policy.eps = 0
-
-        #     evaluate_policies(
-        #         queue_environment,
-        #         {f"monte carlo with eps {monte_carlo.policy.eps}": monte_carlo.policy},
-        #         10,
-        #     )
-
-        #     monte_carlo.policy.eps = old_eps
