@@ -26,8 +26,9 @@ class MonteCarlo(object):
         total_rewards = []
         for _ in range(num_episodes):
             episode_rewards = self._run_episode()
-            self._update_state_action_values()
             total_rewards.append(episode_rewards.sum())
+
+            self._update_state_action_values()
 
         return np.array(total_rewards)
 
@@ -37,7 +38,7 @@ class MonteCarlo(object):
 
         return np.array(state), action
 
-    def _run_episode(self, first_state=None, first_action=None) -> None:
+    def _run_episode(self, first_state=None, first_action=None) -> np.ndarray:
         """Run a single episode and record rewards after the first occurrance of each state-action pair.
 
         Optionally, the user can provide the first state-action pair.
@@ -52,13 +53,11 @@ class MonteCarlo(object):
         if first_state is not None:
             state = first_state
 
-        first_step = True
         step_count = 0
 
         while done is False:
-            if first_step is True and first_action is not None:
+            if step_count == 0 and first_action is not None:
                 action = first_action
-                first_step = False
             else:
                 action = self.policy.select_action(state)
 
@@ -74,6 +73,7 @@ class MonteCarlo(object):
         for state, action in state_action_first_occurrence_idx.raw_state_actions:
             first_occurrance_idx = state_action_first_occurrence_idx.get(state, action)
             state_action_return = sum(episode_rewards[first_occurrance_idx:])
+
             self.returns.set(state, action, state_action_return)
 
         return np.array(episode_rewards)

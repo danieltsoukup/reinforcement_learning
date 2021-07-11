@@ -9,6 +9,7 @@ from gym.core import Env
 from gym.spaces import Discrete, Space
 from typing import Tuple
 import pytest
+import numpy as np
 
 
 class DummyEnv(Env):
@@ -64,26 +65,49 @@ def test_greedy_choice(dummy_env):
     assert tabular_policy.select_action(0) == 1
 
 
-def test_state_action_record_setter_getter():
+@pytest.fixture
+def state():
+    return np.array([1, 2])
+
+
+@pytest.fixture
+def action():
+    return 1
+
+
+def test_state_action_record_setter_getter(state, action):
     record = StateActionRecord(float)
-    state, action = "state", "action"
     value = 1
     record.set(state, action, value)
 
     assert record.get(state, action) == 1
 
 
-def test_state_action_record_default_getter():
+def test_state_action_record_contains(state, action):
     record = StateActionRecord(float)
-    state, action = "state", "action"
+    value = 1
+    record.set(state, action, value)
+
+    assert record.contains(state, action)
+
+
+def test_state_action_raw(state, action):
+    record = StateActionRecord(float)
+    value = 1
+    record.set(state, action, value)
+
+    assert (state, action) in record.raw_state_actions
+
+
+def test_state_action_record_default_getter(state, action):
+    record = StateActionRecord(float)
     expected_value = 0
 
     assert record.get(state, action) == expected_value
 
 
-def test_list_record():
+def test_list_record(state, action):
     record = StateActionListRecord()
-    state, action = "state", "action"
 
     record.set(state, action, 0)
     record.set(state, action, 1)

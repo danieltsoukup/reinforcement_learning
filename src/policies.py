@@ -89,6 +89,9 @@ class StateActionListRecord(StateActionRecord):
         state_string = self._state_to_string(state)
         action_string = self._action_to_string(action)
 
+        if self.contains(state, action) is False:
+            self.raw_state_actions.append((state, action))
+
         self.record[state_string][action_string].append(value)
 
 
