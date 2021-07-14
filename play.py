@@ -1,7 +1,5 @@
-from src import environments
 from src.environments import QueueAccessControl, LineWorld
 from src.policies import (
-    ConstantPolicy,
     RandomPolicy,
     Policy,
     TabularEpsilonGreedyPolicy,
@@ -11,6 +9,7 @@ from src.learning import MonteCarlo
 import numpy as np
 from gym.core import Env
 from typing import Dict
+from tqdm import tqdm
 
 
 def evaluate_policies(environment: Env, policies: Dict[str, Policy], num_episodes: int):
@@ -21,7 +20,7 @@ def evaluate_policies(environment: Env, policies: Dict[str, Policy], num_episode
         mean = rewards.mean()
         low, high = np.quantile(rewards, [0.05, 0.95])
 
-        print(f"Policy {name} yields {mean} mean reward (90% conf. {low} to {high}).")
+        print(f"Policy {name} yields {mean} mean reward (90% conf. {low} to {high}).\n")
 
 
 #########################
@@ -52,14 +51,13 @@ if __name__ == "__main__":
 
     monte_carlo = MonteCarlo(environment, tabular_policy)
 
-    for i in range(100):
+    progress_bar = tqdm(range(100))
+    for i in progress_bar:
         total_rewards = monte_carlo.learn(50)
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
-
-        print(
-            f"{i} -- MC {mean} mean reward (90% conf. {low} to {high}) (eps {round(monte_carlo.policy.eps, 2)})."
-        )
+        message = f"Mean reward {mean} (90% CI: {low} to {high}, eps: {round(monte_carlo.policy.eps, 2)})"
+        progress_bar.set_description(message, refresh=True)
 
         tabular_policy.eps *= 0.95
