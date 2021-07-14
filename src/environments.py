@@ -1,7 +1,8 @@
 from gym.core import Env
-from gym.spaces import Discrete, Space, Tuple as TupleSpace
-from typing import Tuple, List
+from gym.spaces import Discrete, Space, Tuple as TupleSpace, Box
+from typing import Tuple, List, Dict, Any, Set
 import numpy as np
+from enum import Enum
 
 
 class QueueAccessControl(Env):
@@ -82,7 +83,7 @@ class QueueAccessControl(Env):
 
     def step(
         self, action: int, unlock: bool = True
-    ) -> Tuple[np.ndarray, float, bool, dict]:
+    ) -> Tuple[np.ndarray, float, bool, Dict[str, Any]]:
         """Takes the given action, updates and returns the state with
         the reward, indicator if the episode is done and an info dictionary.
         """
@@ -185,7 +186,10 @@ class LineWorld(Env):
 
         self.action_space: Space = Discrete(2)
         self.observation_space: Space = Discrete(self.num_nonterminal_states + 2)
-        self.reward_range: Tuple[int, int] = (0, 100)
+        self.reward_range: Tuple[int, int] = (
+            self.non_terminal_reward,
+            self.terminal_reward,
+        )
 
         self._state = None
 
@@ -210,7 +214,7 @@ class LineWorld(Env):
 
         return self.state
 
-    def step(self, action: int) -> Tuple[int, float, bool, dict]:
+    def step(self, action: int) -> Tuple[int, float, bool, Dict[str, Any]]:
         if action == type(self).LEFT_STEP_ACTION:
             self.state -= 1
         elif action == type(self).RIGHT_STEP_ACTION:
@@ -228,3 +232,130 @@ class LineWorld(Env):
 
     def is_done(self) -> bool:
         return self.state in {self.terminal_state_left, self.terminal_state_right}
+
+
+class Maze2D(Env):
+    UP_ACTION = 0
+    DOWN_ACTION = 1
+    LEFT_ACTION = 2
+    RIGHT_ACTION = 3
+
+    def __init__(self, height: int, width: int) -> None:
+        self.height = height
+        self.width = width
+
+        self.start_position = (0, 0)
+        self.end_position = (self.height - 1, self.width - 1)
+
+        self.blocked_positions: Set[Tuple[int, int]] = None
+
+        self.terminal_reward = 1
+        self.non_terminal_reward = -1
+
+        self.action_space: Space = Discrete(4)
+        self.observation_space: Space = Box(
+            low=np.array([0, 0]),
+            high=np.array([self.height, self.width]),
+            dtype=np.int32,
+        )
+        self.reward_range: Tuple[int, int] = (
+            self.non_terminal_reward,
+            self.terminal_reward,
+        )
+
+        self.state: Tuple[int, int] = None
+
+    def reset(self) -> Any:
+        self.state = self.start_position
+
+        return self.state
+
+    def is_done(self) -> bool:
+        return self.state == self.end_position
+
+    def step(self, action: int) -> Tuple[Tuple[int, int], float, bool, Dict[str, Any]]:
+        if action == type(self).LEFT_ACTION:
+            self._step_left()
+        elif action == type(self).RIGHT_ACTION:
+            self._step_right()
+        elif action == type(self).DOWN_ACTION:
+            self._step_down()
+        elif action == type(self).UP_ACTION:
+            self._step_up()
+        else:
+            raise ValueError(f"Action {action} is invalid.")
+
+        info = dict()
+        done = self.is_done()
+
+        if done:
+            reward = self.terminal_reward
+        else:
+            reward = self.non_terminal_reward
+
+        return self.state, reward, done, info
+
+    def _step_right(self) -> None:
+        h, w = self._get_state_height_width()
+        new_h = h
+        new_w = w + 1
+
+        new_state = self._construct_state_from_height_width(new_h, new_w)
+        if self._is_valid_state(new_state):
+            self.state = new_state
+        else:
+            pass
+
+    def _step_left(self) -> None:
+        h, w = self._get_state_height_width()
+        new_h = h
+        new_w = w - 1
+
+        new_state = self._construct_state_from_height_width(new_h, new_w)
+        if self._is_valid_state(new_state):
+            self.state = new_state
+        else:
+            pass
+
+    def _step_down(self) -> None:
+        h, w = self._get_state_height_width()
+        new_h = h - 1
+        new_w = w
+
+        new_state = self._construct_state_from_height_width(new_h, new_w)
+        if self._is_valid_state(new_state):
+            self.state = new_state
+        else:
+            pass
+
+    def _step_up(self) -> None:
+        h, w = self._get_state_height_width()
+        new_h = h + 1
+        new_w = w
+
+        new_state = self._construct_state_from_height_width(new_h, new_w)
+        if self._is_valid_state(new_state):
+            self.state = new_state
+        else:
+            pass
+
+    def _construct_state_from_height_width(
+        self, height: int, width: int
+    ) -> Tuple[int, int]:
+        return (height, width)
+
+    def _get_state_height_width(self) -> Tuple[int, int]:
+        return self.state
+
+    def _is_valid_state(self, state: Tuple[int, int]) -> bool:
+        return self._is_notblocked(state) and self._is_insidebounds(state)
+
+    def _is_notblocked(self, state: Tuple[int, int]) -> bool:
+        return state in self.blocked_positions
+
+    def _is_insidebounds(self, state: Tuple[int, int]) -> bool:
+        h, w = self._get_state_height_width()
+        width_check = (w >= 0) and (w < self.width)
+        height_check = (h >= 0) and (h < self.height)
+
+        return width_check and height_check

@@ -1,5 +1,5 @@
 import pytest
-from src.environments import QueueAccessControl
+from src.environments import QueueAccessControl, Maze2D
 
 
 @pytest.fixture
@@ -106,3 +106,8 @@ def test_unlock_zero_proba(queue_env):
     queue_env.unlock_servers(0)
 
     assert queue_env.num_free_servers == queue_env.num_servers - 1
+
+
+def test_init_maze():
+    _ = Maze2D(5, 10)
+    assert True
