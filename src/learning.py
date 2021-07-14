@@ -16,9 +16,9 @@ class MonteCarlo(object):
     Ref: Sutton & Barto Chapter 5.3
     """
 
-    def __init__(self, environment: Env) -> None:
+    def __init__(self, environment: Env, tabular_policy: TabularGreedyPolicy) -> None:
         self.environment = environment
-        self.policy = TabularEpsilonGreedyPolicy(self.environment, 0.5)
+        self.policy = tabular_policy
         self.returns = StateActionListRecord()
 
     def learn(self, num_episodes: int) -> np.ndarray:

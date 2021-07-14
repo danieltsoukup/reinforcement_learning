@@ -1,6 +1,11 @@
 from src import environments
 from src.environments import QueueAccessControl, LineWorld
-from src.policies import ConstantPolicy, RandomPolicy, Policy
+from src.policies import (
+    ConstantPolicy,
+    RandomPolicy,
+    Policy,
+    TabularEpsilonGreedyPolicy,
+)
 from src.experimenter import Experiment
 from src.learning import MonteCarlo
 import numpy as np
@@ -31,7 +36,7 @@ queue_environment = QueueAccessControl(
     unlock_proba=0.2,
 )
 
-lineworld_environment = LineWorld(5)
+lineworld_environment = LineWorld(21)
 
 if __name__ == "__main__":
 
@@ -43,7 +48,9 @@ if __name__ == "__main__":
         10,
     )
 
-    monte_carlo = MonteCarlo(environment)
+    tabular_policy = TabularEpsilonGreedyPolicy(environment, 0.5)
+
+    monte_carlo = MonteCarlo(environment, tabular_policy)
 
     for i in range(100):
         total_rewards = monte_carlo.learn(50)
@@ -55,4 +62,4 @@ if __name__ == "__main__":
             f"{i} -- MC {mean} mean reward (90% conf. {low} to {high}) (eps {round(monte_carlo.policy.eps, 2)})."
         )
 
-        monte_carlo.policy.eps *= 0.95
+        tabular_policy.eps *= 0.95
