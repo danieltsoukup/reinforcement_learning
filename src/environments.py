@@ -265,6 +265,9 @@ class Maze2D(Env):
 
         self.state: Tuple[int, int] = None
 
+    def __str__(self) -> str:
+        return f"Maze2D_{self.height}x{self.width}"
+
     def reset(self) -> Any:
         self.state = self.start_position
 

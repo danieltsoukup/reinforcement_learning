@@ -1,4 +1,4 @@
-from src.environments import QueueAccessControl, LineWorld
+from src.environments import Maze2D, QueueAccessControl, LineWorld
 from src.policies import (
     RandomPolicy,
     Policy,
@@ -21,7 +21,9 @@ def evaluate_policies(environment: Env, policies: Dict[str, Policy], num_episode
         mean = rewards.mean()
         low, high = np.quantile(rewards, [0.05, 0.95])
 
-        print(f"Policy {name} yields {mean} mean reward (90% conf. {low} to {high}).\n")
+        print(
+            f"Policy {name} yields {mean: .2f} mean reward (90% conf. {low: .2f} to {high: .2f}).\n"
+        )
 
 
 #########################
@@ -38,9 +40,13 @@ queue_environment = QueueAccessControl(
 
 lineworld_environment = LineWorld(21)
 
+maze = Maze2D(10, 10)
+
+maze.add_blocked_states([(5, i) for i in range(0, 9)])
+
 if __name__ == "__main__":
 
-    environment = lineworld_environment
+    environment = maze
 
     evaluate_policies(
         environment,
@@ -60,7 +66,7 @@ if __name__ == "__main__":
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
-        message = f"Mean reward {mean} (90% CI: {low} to {high}, eps: {round(monte_carlo.policy.eps, 2)})"
+        message = f"Mean reward {mean} (90% CI: {low: .2f} to {high: .2f}, eps: {monte_carlo.policy.eps: .2f})"
         progress_bar.set_description(message, refresh=True)
 
         tabular_policy.eps *= 0.95
