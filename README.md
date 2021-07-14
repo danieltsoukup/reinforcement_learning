@@ -5,10 +5,13 @@
 
 The following environments are implemented.
 
+### 2D Maze
+
+Implemented under `Maze2D`, the agent navigates a maze with blocked cells (stepping up, down, left or right) starting at one corner (0, 0) and aiming to find the terminal state at (height-1, width-1) in the shortest amount of time. Reaching a non-terminal state is reward by -1 (terminal reward is 1).
 
 ### Line World
 
-Implemented under `LineWorld`, a linear state space with left/right steps as actions for each state. The only reward comes at reaching the right endpoint. Good for debugging learning policies.
+Implemented under `LineWorld`, a linear state space with left/right steps as actions for each state. Stepping into non-terminal states are negatively rewarded so the aim is to find the terminal state at one end-point in the shortest amount of time.
 
 
 ### Queue Access Control
