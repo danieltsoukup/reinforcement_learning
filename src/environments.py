@@ -153,6 +153,15 @@ class QueueAccessControl(Env):
 
 
 class LineWorld(Env):
+    """
+    Step left or right on a line graph until reaching either endpoints.
+
+    Each step to non-terminal nodes gives a reward of -1 as well as the left terminal node,
+    the right terminal node reward is 1.
+
+    The episode terminates at left or right endpoints.
+    """
+
     LEFT_STEP_ACTION = 0
     RIGHT_STEP_ACTION = 1
 
@@ -168,7 +177,8 @@ class LineWorld(Env):
         self.terminal_state_right = self.num_nonterminal_states + 1
         self.start_state = self.num_nonterminal_states // 2 + 1
 
-        self.reward = 1
+        self.terminal_reward = 1
+        self.non_terminal_reward = -1
 
         self.action_space: Space = Discrete(2)
         self.observation_space: Space = Discrete(self.num_nonterminal_states + 2)
@@ -195,8 +205,6 @@ class LineWorld(Env):
         return self.state
 
     def step(self, action: int) -> Tuple[int, float, bool, dict]:
-        """Step left or right - only reward comes if the right endpoint is reached. The episode terminates at left or right endpoints."""
-
         if action == type(self).LEFT_STEP_ACTION:
             self.state -= 1
         elif action == type(self).RIGHT_STEP_ACTION:
@@ -206,9 +214,9 @@ class LineWorld(Env):
         info = {}
 
         if self.state == self.terminal_state_right:
-            reward = self.reward
+            reward = self.terminal_reward
         else:
-            reward = 0
+            reward = self.non_terminal_reward
 
         return self.state, reward, done, info
 

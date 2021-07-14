@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     evaluate_policies(
         environment,
-        {"random policy": RandomPolicy(environment)},
+        {"random": RandomPolicy(environment)},
         10,
     )
 
