@@ -147,3 +147,11 @@ def test_maze_step_down_fail(maze):
     maze._step_down()
 
     assert maze.state == (0, 0)
+
+
+def test_maze_block(maze):
+    _ = maze.reset()
+
+    maze.add_blocked_states([(1, 1)])
+
+    assert maze._is_notblocked((1, 1)) is False

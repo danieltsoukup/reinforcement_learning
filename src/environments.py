@@ -270,6 +270,10 @@ class Maze2D(Env):
 
         return self.state
 
+    def add_blocked_states(self, blocked: List[Tuple[int, int]]) -> None:
+
+        self.blocked_positions.update(blocked)
+
     def is_done(self) -> bool:
         return self.state == self.end_position
 
