@@ -21,6 +21,9 @@ class MonteCarlo(object):
         self.policy = tabular_policy
         self.returns = StateActionListRecord()
 
+    def __str__(self) -> str:
+        return "MonteCarlo"
+
     def learn(self, num_episodes: int) -> np.ndarray:
         """Repeatedly runs episodes and updates the state-action values returning the list of total rewards."""
         total_rewards = []

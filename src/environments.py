@@ -52,6 +52,9 @@ class QueueAccessControl(Env):
         self.queue = None
         self.current_customer_pointer = None
 
+    def __str__(self) -> str:
+        return "QueueAccessControl"
+
     @property
     def current_customer(self) -> int:
         if self.current_customer_pointer < len(self.queue):
@@ -185,6 +188,9 @@ class LineWorld(Env):
         self.reward_range: Tuple[int, int] = (0, 100)
 
         self._state = None
+
+    def __str__(self) -> str:
+        return f"LineWorld{self.num_nonterminal_states}"
 
     @property
     def state(self) -> int:

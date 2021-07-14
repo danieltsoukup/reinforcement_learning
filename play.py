@@ -10,6 +10,7 @@ import numpy as np
 from gym.core import Env
 from typing import Dict
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 def evaluate_policies(environment: Env, policies: Dict[str, Policy], num_episodes: int):
@@ -51,7 +52,9 @@ if __name__ == "__main__":
 
     monte_carlo = MonteCarlo(environment, tabular_policy)
 
-    progress_bar = tqdm(range(100))
+    rewards = []
+
+    progress_bar = tqdm(range(50))
     for i in progress_bar:
         total_rewards = monte_carlo.learn(50)
 
@@ -61,3 +64,15 @@ if __name__ == "__main__":
         progress_bar.set_description(message, refresh=True)
 
         tabular_policy.eps *= 0.95
+
+        rewards.extend(total_rewards.tolist())
+
+    file_name = str(monte_carlo) + "_" + str(environment)
+    title = str(monte_carlo) + "learning on " + str(environment)
+
+    plt.figure(figsize=(15, 5))
+    plt.plot(rewards)
+    plt.xlabel("Episodes")
+    plt.ylabel("Total Episode Rewards")
+    plt.title(title)
+    plt.savefig(f"assets/plots/{file_name}.png")
