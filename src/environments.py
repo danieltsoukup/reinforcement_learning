@@ -247,7 +247,7 @@ class Maze2D(Env):
         self.start_position = (0, 0)
         self.end_position = (self.height - 1, self.width - 1)
 
-        self.blocked_positions: Set[Tuple[int, int]] = None
+        self.blocked_positions: Set[Tuple[int, int]] = set()
 
         self.terminal_reward = 1
         self.non_terminal_reward = -1
@@ -296,7 +296,7 @@ class Maze2D(Env):
         return self.state, reward, done, info
 
     def _step_right(self) -> None:
-        h, w = self._get_state_height_width()
+        h, w = self._get_state_height_width(self.state)
         new_h = h
         new_w = w + 1
 
@@ -307,7 +307,7 @@ class Maze2D(Env):
             pass
 
     def _step_left(self) -> None:
-        h, w = self._get_state_height_width()
+        h, w = self._get_state_height_width(self.state)
         new_h = h
         new_w = w - 1
 
@@ -318,7 +318,7 @@ class Maze2D(Env):
             pass
 
     def _step_down(self) -> None:
-        h, w = self._get_state_height_width()
+        h, w = self._get_state_height_width(self.state)
         new_h = h - 1
         new_w = w
 
@@ -329,7 +329,7 @@ class Maze2D(Env):
             pass
 
     def _step_up(self) -> None:
-        h, w = self._get_state_height_width()
+        h, w = self._get_state_height_width(self.state)
         new_h = h + 1
         new_w = w
 
@@ -344,17 +344,17 @@ class Maze2D(Env):
     ) -> Tuple[int, int]:
         return (height, width)
 
-    def _get_state_height_width(self) -> Tuple[int, int]:
-        return self.state
+    def _get_state_height_width(self, state) -> Tuple[int, int]:
+        return state
 
     def _is_valid_state(self, state: Tuple[int, int]) -> bool:
         return self._is_notblocked(state) and self._is_insidebounds(state)
 
     def _is_notblocked(self, state: Tuple[int, int]) -> bool:
-        return state in self.blocked_positions
+        return state not in self.blocked_positions
 
     def _is_insidebounds(self, state: Tuple[int, int]) -> bool:
-        h, w = self._get_state_height_width()
+        h, w = self._get_state_height_width(state)
         width_check = (w >= 0) and (w < self.width)
         height_check = (h >= 0) and (h < self.height)
 

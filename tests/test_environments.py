@@ -108,6 +108,42 @@ def test_unlock_zero_proba(queue_env):
     assert queue_env.num_free_servers == queue_env.num_servers - 1
 
 
-def test_init_maze():
-    _ = Maze2D(5, 10)
-    assert True
+@pytest.fixture
+def maze():
+    maze = Maze2D(5, 5)
+
+    return maze
+
+
+def test_maze_reset(maze):
+    state = maze.reset()
+
+    assert state == (0, 0)
+
+
+def test_maze_step_up(maze):
+    _ = maze.reset()
+    maze._step_up()
+
+    assert maze.state == (1, 0)
+
+
+def test_maze_step_right(maze):
+    _ = maze.reset()
+    maze._step_right()
+
+    assert maze.state == (0, 1)
+
+
+def test_maze_step_left_fail(maze):
+    _ = maze.reset()
+    maze._step_left()
+
+    assert maze.state == (0, 0)
+
+
+def test_maze_step_down_fail(maze):
+    _ = maze.reset()
+    maze._step_down()
+
+    assert maze.state == (0, 0)
