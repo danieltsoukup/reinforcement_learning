@@ -1,8 +1,10 @@
 from gym.core import Env
 from gym.spaces import Discrete, Space, Tuple as TupleSpace, Box
 from typing import Tuple, List, Dict, Any, Set
+from matplotlib.figure import Figure
 import numpy as np
-from enum import Enum
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 
 class QueueAccessControl(Env):
@@ -273,9 +275,9 @@ class Maze2D(Env):
 
         return self.state
 
-    def add_blocked_states(self, blocked: List[Tuple[int, int]]) -> None:
+    def set_blocked_states(self, blocked: List[Tuple[int, int]]) -> None:
 
-        self.blocked_positions.update(blocked)
+        self.blocked_positions = blocked
 
     def is_done(self) -> bool:
         return self.state == self.end_position
@@ -366,3 +368,32 @@ class Maze2D(Env):
         height_check = (h >= 0) and (h < self.height)
 
         return width_check and height_check
+
+    def plot(self) -> Figure:
+        """Plot the maze and current state."""
+        maze_mtx = self._construct_mtx()
+        cmap, norm = mcolors.from_levels_and_colors(
+            [0, 1, 2, 3, 4], ["white", "grey", "green", "red"]
+        )
+
+        fig = plt.figure(figsize=(2 * self.height, 2 * self.width))
+        plt.pcolor(maze_mtx, cmap=cmap, norm=norm)
+
+        h, w = self._get_state_height_width(self.state)
+        state_marker = plt.Circle((h + 0.5, w + 0.5), 0.2, color="black")
+        plt.gca().add_patch(state_marker)
+
+        return fig
+
+    def _construct_mtx(self) -> np.ndarray:
+        maze_mtx = np.full((self.height, self.width), 0)
+        for i, j in self.blocked_positions:
+            maze_mtx[i, j] = 1
+
+        i, j = self.start_position
+        maze_mtx[i, j] = 2
+
+        i, j = self.end_position
+        maze_mtx[i, j] = 3
+
+        return maze_mtx

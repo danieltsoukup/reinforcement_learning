@@ -11,7 +11,8 @@ from typing import List
 
 
 class MonteCarlo(object):
-    """Monte Carlo control with exploring starts for tabular state-action value learning.
+    """
+    Monte Carlo control with exploring starts for tabular state-action value learning.
 
     Ref: Sutton & Barto Chapter 5.3
     """

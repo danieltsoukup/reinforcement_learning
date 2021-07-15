@@ -152,6 +152,15 @@ def test_maze_step_down_fail(maze):
 def test_maze_block(maze):
     _ = maze.reset()
 
-    maze.add_blocked_states([(1, 1)])
+    maze.set_blocked_states([(1, 1)])
 
     assert maze._is_notblocked((1, 1)) is False
+
+
+def test_maze_plot(maze):
+    _ = maze.reset()
+    maze.set_blocked_states([(2, 2), (1, 1), (1, 2)])
+    maze._step_up()
+
+    fig = maze.plot()
+    fig.savefig("assets/plots/maze_plot_test.png")
