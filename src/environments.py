@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from src.policies import TabularGreedyPolicy
+from itertools import product
 
 
 class QueueAccessControl(Env):
@@ -383,7 +384,7 @@ class Maze2D(Env):
         plt.pcolor(maze_mtx, cmap=cmap, norm=norm)
 
         h, w = self._get_state_height_width(self.state)
-        state_marker = plt.Circle((h + 0.5, w + 0.5), 0.2, color="black")
+        state_marker = plt.Circle((h + 0.5, w + 0.5), 0.1, color="black")
         plt.gca().add_patch(state_marker)
 
         return fig
@@ -404,19 +405,19 @@ class Maze2D(Env):
     def plot_policy(self, policy: TabularGreedyPolicy) -> Figure:
         fig = self.plot()
 
-        for h in range(self.height):
-            for w in range(self.width):
-                state = self._construct_state_from_height_width(h, w)
-                if state in self.blocked_positions or state == self.end_position:
-                    pass
-                else:
-                    action = policy.select_action(state)
-                    action_str = type(self).ACTION_INV[action]
+        for h, w in product(range(self.height), range(self.width)):
+            state = self._construct_state_from_height_width(h, w)
+            blocked_or_terminal = (
+                state in self.blocked_positions or state == self.end_position
+            )
+            if not blocked_or_terminal:
+                action = policy.select_action(state)
+                action_str = type(self).ACTION_INV[action]
 
-                    plt.text(w + 0.5, h + 0.5, action_str)
+                plt.text(w + 0.5, h + 0.5, action_str)
 
-                    dx, dy = self._get_step_direction_offset(action_str)
-                    plt.arrow(w + 0.5, h + 0.5, dx, dy, head_width=0.1)
+                dx, dy = self._get_step_direction_offset(action_str)
+                plt.arrow(w + 0.5, h + 0.5, dx, dy, head_width=0.1)
 
         return fig
 
