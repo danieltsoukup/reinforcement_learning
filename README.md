@@ -1,5 +1,8 @@
 # Reinforcement Learning Experiments
 
+This repo explores different approaches for reinforcement learning, both policy evaluation and control problems. 
+
+See [some examples here](EXAMPLES.md).
 
 ## Environments
 

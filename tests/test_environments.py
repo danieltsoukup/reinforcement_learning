@@ -164,7 +164,7 @@ def test_maze_plot(maze):
     # maze._step_up()
 
     fig = maze.plot()
-    fig.savefig("assets/plots/maze_plot_test.png")
+    fig.savefig("assets/test_plots/maze_plot_test.png")
 
 
 def test_maze_policy_plot(maze):
@@ -176,4 +176,4 @@ def test_maze_policy_plot(maze):
     policy = RandomPolicy(maze)
 
     fig = maze.plot_policy(policy)
-    fig.savefig("assets/plots/maze_plot_policy_test.png")
+    fig.savefig("assets/test_plots/maze_plot_policy_test.png")
