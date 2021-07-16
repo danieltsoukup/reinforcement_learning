@@ -4,11 +4,11 @@
 
 We used the classical Monte Carlo method to learn state-action values for a 2D maze environment. The learning was on-policy, we used an epsilon-greedy policy based on the current state-action values, exponentially decaying epsilon as learning progressed to decrease exploration. 
 
-The negative rewards per episode are shown below.
+The negative rewards per episode are plotted:
 
 ![reward line plot](assets/plots/MonteCarlo_Maze2D_10x10_learning_rewards.png)
 
-The final, deterministic greedy policy is shown below:
+The final, near optimal, action selection by the greedy policy is shown below:
 
 ![maze policy](assets/plots/MonteCarlo_Maze2D_10x10_learned_policy.png)
 
