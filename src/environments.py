@@ -5,6 +5,7 @@ from matplotlib.figure import Figure
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from src.policies import TabularGreedyPolicy
 
 
 class QueueAccessControl(Env):
@@ -242,6 +243,8 @@ class Maze2D(Env):
     LEFT_ACTION = 2
     RIGHT_ACTION = 3
 
+    ACTION_INV = {0: "U", 1: "D", 2: "L", 3: "R"}
+
     def __init__(self, height: int, width: int) -> None:
         self.height = height
         self.width = width
@@ -397,3 +400,35 @@ class Maze2D(Env):
         maze_mtx[i, j] = 3
 
         return maze_mtx
+
+    def plot_policy(self, policy: TabularGreedyPolicy) -> Figure:
+        fig = self.plot()
+
+        for h in range(self.height):
+            for w in range(self.width):
+                state = self._construct_state_from_height_width(h, w)
+                if state in self.blocked_positions or state == self.end_position:
+                    pass
+                else:
+                    action = policy.select_action(state)
+                    action_str = type(self).ACTION_INV[action]
+
+                    plt.text(w + 0.5, h + 0.5, action_str)
+
+                    dx, dy = self._get_step_direction_offset(action_str)
+                    plt.arrow(w + 0.5, h + 0.5, dx, dy, head_width=0.1)
+
+        return fig
+
+    def _get_step_direction_offset(self, action_string: str) -> Tuple[float, float]:
+        length = 0.25
+        if action_string == "U":
+            offset = (length, 0)
+        elif action_string == "D":
+            offset = (-length, 0)
+        elif action_string == "R":
+            offset = (0, length)
+        elif action_string == "L":
+            offset = (0, -length)
+
+        return offset

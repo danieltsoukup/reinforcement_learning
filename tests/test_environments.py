@@ -1,5 +1,6 @@
 import pytest
 from src.environments import QueueAccessControl, Maze2D
+from src.policies import RandomPolicy
 
 
 @pytest.fixture
@@ -109,7 +110,7 @@ def test_unlock_zero_proba(queue_env):
 
 
 @pytest.fixture
-def maze():
+def maze() -> Maze2D:
     maze = Maze2D(5, 5)
 
     return maze
@@ -164,3 +165,15 @@ def test_maze_plot(maze):
 
     fig = maze.plot()
     fig.savefig("assets/plots/maze_plot_test.png")
+
+
+def test_maze_policy_plot(maze):
+    _ = maze.reset()
+
+    maze.set_blocked_states([(2, 2), (1, 1), (1, 2), (1, 3), (2, 4)])
+    maze._step_up()
+
+    policy = RandomPolicy(maze)
+
+    fig = maze.plot_policy(policy)
+    fig.savefig("assets/plots/maze_plot_policy_test.png")
