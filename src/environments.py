@@ -4,6 +4,7 @@ from typing import Tuple, List, Dict, Any, Set
 from matplotlib.figure import Figure
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import matplotlib.colors as mcolors
 from src.policies import TabularGreedyPolicy
 from itertools import product
@@ -310,8 +311,8 @@ class Maze2D(Env):
 
     def _step_right(self) -> None:
         h, w = self._get_state_height_width(self.state)
-        new_h = h
-        new_w = w + 1
+        new_h = h + 1
+        new_w = w
 
         new_state = self._construct_state_from_height_width(new_h, new_w)
         if self._is_valid_state(new_state):
@@ -320,17 +321,6 @@ class Maze2D(Env):
             pass
 
     def _step_left(self) -> None:
-        h, w = self._get_state_height_width(self.state)
-        new_h = h
-        new_w = w - 1
-
-        new_state = self._construct_state_from_height_width(new_h, new_w)
-        if self._is_valid_state(new_state):
-            self.state = new_state
-        else:
-            pass
-
-    def _step_down(self) -> None:
         h, w = self._get_state_height_width(self.state)
         new_h = h - 1
         new_w = w
@@ -341,10 +331,21 @@ class Maze2D(Env):
         else:
             pass
 
+    def _step_down(self) -> None:
+        h, w = self._get_state_height_width(self.state)
+        new_h = h
+        new_w = w - 1
+
+        new_state = self._construct_state_from_height_width(new_h, new_w)
+        if self._is_valid_state(new_state):
+            self.state = new_state
+        else:
+            pass
+
     def _step_up(self) -> None:
         h, w = self._get_state_height_width(self.state)
-        new_h = h + 1
-        new_w = w
+        new_h = h
+        new_w = w + 1
 
         new_state = self._construct_state_from_height_width(new_h, new_w)
         if self._is_valid_state(new_state):
@@ -375,32 +376,36 @@ class Maze2D(Env):
 
     def plot(self) -> Figure:
         """Plot the maze and current state."""
-        maze_mtx = self._construct_mtx()
-        cmap, norm = mcolors.from_levels_and_colors(
-            [0, 1, 2, 3, 4], ["white", "grey", "green", "red"]
-        )
 
         fig = plt.figure(figsize=(2 * self.height, 2 * self.width))
-        plt.pcolor(maze_mtx, cmap=cmap, norm=norm)
+        ax = plt.gca()
+
+        background_rectangle = Rectangle(
+            (0, 0), self.height, self.width, facecolor="white", edgecolor="black"
+        )
+        ax.add_patch(background_rectangle)
+
+        for state in self.blocked_positions:
+            h, w = self._get_state_height_width(state)
+            rectangle = Rectangle((h, w), 1, 1, facecolor="grey")
+            ax.add_patch(rectangle)
+
+        h, w = self._get_state_height_width(self.start_position)
+        start_rectangle = Rectangle((h, w), 1, 1, facecolor="green")
+        ax.add_patch(start_rectangle)
+
+        h, w = self._get_state_height_width(self.end_position)
+        end_rectangle = Rectangle((h, w), 1, 1, facecolor="red")
+        ax.add_patch(end_rectangle)
 
         h, w = self._get_state_height_width(self.state)
         state_marker = plt.Circle((h + 0.5, w + 0.5), 0.1, color="black")
-        plt.gca().add_patch(state_marker)
+        ax.add_patch(state_marker)
+
+        ax.axis("off")
+        plt.grid()
 
         return fig
-
-    def _construct_mtx(self) -> np.ndarray:
-        maze_mtx = np.full((self.height, self.width), 0)
-        for i, j in self.blocked_positions:
-            maze_mtx[i, j] = 1
-
-        i, j = self.start_position
-        maze_mtx[i, j] = 2
-
-        i, j = self.end_position
-        maze_mtx[i, j] = 3
-
-        return maze_mtx
 
     def plot_policy(self, policy: TabularGreedyPolicy) -> Figure:
         fig = self.plot()
@@ -414,22 +419,26 @@ class Maze2D(Env):
                 action = policy.select_action(state)
                 action_str = type(self).ACTION_INV[action]
 
-                plt.text(w + 0.5, h + 0.5, action_str)
+                plt.text(h + 0.1, w + 0.1, f"{h}, {w}")
+                plt.text(h + 0.9, w + 0.9, action_str)
 
-                dx, dy = self._get_step_direction_offset(action_str)
-                plt.arrow(w + 0.5, h + 0.5, dx, dy, head_width=0.1)
+                dh, dw = self._get_step_direction_offset(action_str)
+                plt.arrow(h + 0.5, w + 0.5, dh, dw, head_width=0.1)
 
         return fig
 
-    def _get_step_direction_offset(self, action_string: str) -> Tuple[float, float]:
-        length = 0.25
+    def _get_step_direction_offset(
+        self, action_string: str, scale: float = 1
+    ) -> Tuple[float, float]:
+        """Returns the height and width offsets after a given action for plotting arrows."""
+        length = 0.25 * scale
         if action_string == "U":
-            offset = (length, 0)
-        elif action_string == "D":
-            offset = (-length, 0)
-        elif action_string == "R":
             offset = (0, length)
-        elif action_string == "L":
+        elif action_string == "D":
             offset = (0, -length)
+        elif action_string == "R":
+            offset = (length, 0)
+        elif action_string == "L":
+            offset = (-length, 0)
 
         return offset

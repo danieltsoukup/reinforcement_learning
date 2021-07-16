@@ -126,14 +126,14 @@ def test_maze_step_up(maze):
     _ = maze.reset()
     maze._step_up()
 
-    assert maze.state == (1, 0)
+    assert maze.state == (0, 1)
 
 
 def test_maze_step_right(maze):
     _ = maze.reset()
     maze._step_right()
 
-    assert maze.state == (0, 1)
+    assert maze.state == (1, 0)
 
 
 def test_maze_step_left_fail(maze):
@@ -160,8 +160,8 @@ def test_maze_block(maze):
 
 def test_maze_plot(maze):
     _ = maze.reset()
-    maze.set_blocked_states([(2, 2), (1, 1), (1, 2)])
-    maze._step_up()
+    # maze.set_blocked_states([(2, 2), (1, 1), (1, 2)])
+    # maze._step_up()
 
     fig = maze.plot()
     fig.savefig("assets/plots/maze_plot_test.png")

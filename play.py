@@ -47,24 +47,21 @@ if __name__ == "__main__":
 
     rewards = []
 
-    progress_bar = tqdm(range(200))
+    progress_bar = tqdm(range(100))
     for i in progress_bar:
-        total_rewards = monte_carlo.learn(1)
+        total_rewards = monte_carlo.learn(50)
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
         message = f"Mean reward {mean} (90% CI: {low: .2f} to {high: .2f}, eps: {monte_carlo.policy.eps: .2f})"
         progress_bar.set_description(message, refresh=True)
 
-        tabular_policy.eps *= 0.97
+        tabular_policy.eps *= 0.99
 
         rewards.extend(total_rewards.tolist())
 
-        # if i == 100:
-        #     maze.set_blocked_states(block_1)
-
     file_name = str(monte_carlo) + "_" + str(environment)
-    title = str(monte_carlo) + "learning on " + str(environment)
+    title = str(monte_carlo) + " learning on " + str(environment)
 
     plt.figure(figsize=(15, 5))
     plt.plot(-1 * np.array(rewards))
@@ -72,4 +69,8 @@ if __name__ == "__main__":
     plt.ylabel("Total Episode Negative Rewards (log scale)")
     plt.yscale("log")
     plt.title(title)
-    plt.savefig(f"assets/plots/{file_name}.png")
+    plt.savefig(f"assets/plots/{file_name}_learning_rewards.png")
+
+    tabular_policy.eps = 0
+    fig = maze.plot_policy(tabular_policy)
+    fig.savefig(f"assets/plots/{file_name}_learned_policy.png")
