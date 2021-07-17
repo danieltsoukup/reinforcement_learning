@@ -5,7 +5,7 @@ from src.policies import (
     TabularGreedyPolicy,
 )
 import numpy as np
-from typing import List
+from typing import Any, List
 from abc import abstractmethod
 
 
@@ -16,16 +16,10 @@ class TabularControlMethod(object):
         self.environment = environment
         self.policy = tabular_policy
 
+    @abstractmethod
     def learn(self, num_episodes: int) -> np.ndarray:
         """Repeatedly runs episodes and updates the state-action values returning the list of total rewards."""
-        total_rewards = []
-        for _ in range(num_episodes):
-            episode_rewards = self._run_episode()
-            total_rewards.append(episode_rewards.sum())
-
-            self._update_state_action_values()
-
-        return np.array(total_rewards)
+        pass
 
     @abstractmethod
     def _update_state_action_values(self) -> None:
@@ -55,6 +49,17 @@ class MonteCarlo(TabularControlMethod):
         action = self.environment.action_space.sample()
 
         return np.array(state), action
+
+    def learn(self, num_episodes: int) -> np.ndarray:
+        """Repeatedly runs episodes and updates the state-action values returning the list of total rewards."""
+        total_rewards = []
+        for _ in range(num_episodes):
+            episode_rewards = self._run_episode()
+            total_rewards.append(episode_rewards.sum())
+
+            self._update_state_action_values()
+
+        return np.array(total_rewards)
 
     def _run_episode(self, first_state=None, first_action=None) -> np.ndarray:
         """Run a single episode and record rewards after the first occurrance of each state-action pair.
@@ -125,10 +130,39 @@ class SARSA(TabularControlMethod):
         self.alpha = alpha
         self.gamma = gamma
 
-    @abstractmethod
-    def _run_episode(self) -> np.ndarray:
-        pass
+    def learn(self, num_episodes: int) -> np.ndarray:
+        """
+        Repeatedly runs episodes and return the list of total rewards per episode.
+        """
+        total_rewards = []
+        for _ in range(num_episodes):
+            episode_rewards = self._run_episode()
+            total_rewards.append(episode_rewards.sum())
 
-    @abstractmethod
-    def _update_state_action_values(self) -> None:
+        return np.array(total_rewards)
+
+    def _run_episode(self) -> np.ndarray:
+        state = self.environment.reset()
+
+        done = False
+
+        episode_rewards = []
+        while not done:
+            action = self.policy.select_action(state)
+            next_state, reward, done, info = self.environment.step(action)
+            next_action = self.policy.select_action(next_state)
+
+            self._update_state_action_values(
+                state, action, reward, next_state, next_action
+            )
+
+            episode_rewards.append(reward)
+            state = next_state
+
+        return np.array(episode_rewards)
+
+    def _update_state_action_values(
+        self, state: Any, action: Any, reward: Any, next_state: Any, next_action: Any
+    ) -> None:
+        # TODO
         pass
