@@ -164,5 +164,13 @@ class SARSA(TabularControlMethod):
     def _update_state_action_values(
         self, state: Any, action: Any, reward: Any, next_state: Any, next_action: Any
     ) -> None:
-        # TODO
-        pass
+        current_state_action_value = self.policy.state_action_values.get(state, action)
+        next_state_action_value = self.policy.state_action_values.get(
+            next_state, next_action
+        )
+
+        updated_state_action_value = current_state_action_value + self.alpha * (
+            reward + self.gamma * next_state_action_value - current_state_action_value
+        )
+
+        self.policy.set_state_action_value(state, action, updated_state_action_value)
