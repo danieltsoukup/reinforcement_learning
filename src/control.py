@@ -130,6 +130,9 @@ class SARSA(TabularControlMethod):
         self.alpha = alpha
         self.gamma = gamma
 
+    def __str__(self) -> str:
+        return f"SarsaControl_alpha{self.alpha}_gamma{self.gamma}"
+
     def learn(self, num_episodes: int) -> np.ndarray:
         """
         Repeatedly runs episodes and return the list of total rewards per episode.
@@ -164,6 +167,9 @@ class SARSA(TabularControlMethod):
     def _update_state_action_values(
         self, state: Any, action: Any, reward: Any, next_state: Any, next_action: Any
     ) -> None:
+        """
+        SARSA update rule from Sutton & Barto, Section 6.4.
+        """
         current_state_action_value = self.policy.state_action_values.get(state, action)
         next_state_action_value = self.policy.state_action_values.get(
             next_state, next_action

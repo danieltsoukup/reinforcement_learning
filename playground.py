@@ -4,7 +4,7 @@ from src.policies import (
     TabularEpsilonGreedyPolicy,
 )
 from src.experimenter import evaluate_policies
-from src.learning import MonteCarlo
+from src.control import MonteCarlo, SARSA
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -43,25 +43,25 @@ if __name__ == "__main__":
 
     tabular_policy = TabularEpsilonGreedyPolicy(environment, 0.5)
 
-    monte_carlo = MonteCarlo(environment, tabular_policy)
+    control = SARSA(environment, tabular_policy, 0.1, 0.5)
 
     rewards = []
 
     progress_bar = tqdm(range(100))
     for i in progress_bar:
-        total_rewards = monte_carlo.learn(50)
+        total_rewards = control.learn(50)
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
-        message = f"Mean reward {mean} (90% CI: {low: .2f} to {high: .2f}, eps: {monte_carlo.policy.eps: .2f})"
+        message = f"Mean reward {mean} (90% CI: {low: .2f} to {high: .2f}, eps: {control.policy.eps: .2f})"
         progress_bar.set_description(message, refresh=True)
 
         tabular_policy.eps *= 0.99
 
         rewards.extend(total_rewards.tolist())
 
-    file_name = str(monte_carlo) + "_" + str(environment)
-    title = str(monte_carlo) + " learning on " + str(environment)
+    file_name = str(control) + "_" + str(environment)
+    title = str(control) + " learning on " + str(environment)
 
     plt.figure(figsize=(15, 5))
     plt.plot(-1 * np.array(rewards))
