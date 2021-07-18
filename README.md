@@ -30,8 +30,20 @@ The following policies are implemented.
 - `RandomPolicy`: select action randomly.
 - `TabularGreedy` and `TabularEpsilonGreedy`: based on state-action values, select the action with highest value (or explore).
 
-## Learning methods
+## Control methods
 
 The following value learning and control algorithms are tested:
 
 - `MonteCarlo`: tabular, on-policy Monte Carlo learning. We run an episode and record the state-action _returns_ i.e., the sum of rewards after the first occurrence of each state-action pair. The state-action values are the mean of the so-far observed state-action returns (updated after each episode). The simulated episode uses the an epsilon-greedy action selection based on the state-actions values calculated so far. 
+
+- `SARSA`: tabular, on-policy SARSA learning. The state-action values are update following every step based on the rule
+
+$$Q(s,a) \leftarrow Q(s, a) + \alpha[r + \gamma Q(s', a') - Q(s, a)]$$
+
+where 
+
+- $s$ is the current state and $a$ is the action selected by the $\varepsilon$-greedy policy,
+- $r$ is the reward, and
+- $s'$ are the resulting state and $a'$ is the next selected action.
+
+The hyperparameters are the learning rate $\alpha$ and discount factor $\gamma$.
