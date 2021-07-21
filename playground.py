@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     rewards = []
 
-    progress_bar = tqdm(range(100))
+    progress_bar = tqdm(range(50))
     for i in progress_bar:
         total_rewards = control.learn(50)
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         message = f"Mean reward {mean} (90% CI: {low: .2f} to {high: .2f}, eps: {control.policy.eps: .2f})"
         progress_bar.set_description(message, refresh=True)
 
-        tabular_policy.eps *= 0.99
+        tabular_policy.eps *= 0.95
 
         rewards.extend(total_rewards.tolist())
 
