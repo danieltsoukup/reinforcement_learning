@@ -7,7 +7,7 @@ from typing import Dict
 
 def evaluate_policies(environment: Env, policies: Dict[str, Policy], num_episodes: int):
     """
-    Utility function to evaluate multiple policies on a single environment.
+    Utility function to evaluate multiple policies on a single environment. Returns the mean reward.
     """
     for name, policy in policies.items():
         experiment = Experiment(environment, policy)
@@ -26,19 +26,25 @@ class Experiment(object):
     Run multiple episodes using an environment-policy pair, returning the array of total rewards per episode.
     """
 
-    def __init__(self, environment: Env, policy: Policy) -> None:
+    def __init__(
+        self, environment: Env, policy: Policy, step_limit: int = np.inf
+    ) -> None:
         self.environment = environment
         self.policy = policy
+        self.episode_limit = step_limit
 
     def run_episode(self) -> np.ndarray:
         state = self.environment.reset()
         done = False
+        episode_limit = self.episode_limit
 
         rewards = []
-        while done is False:
+        while done is False and episode_limit > 0:
             action = self.policy.select_action(state)
             state, reward, done, info = self.environment.step(action)
             rewards.append(reward)
+
+            episode_limit -= 1
 
         return np.array(rewards)
 

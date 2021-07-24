@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     progress_bar = tqdm(range(50))
     for i in progress_bar:
-        total_rewards = control.learn(50)
+        total_rewards = control.learn(50, episode_limit=100)
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
@@ -66,8 +66,7 @@ if __name__ == "__main__":
     plt.figure(figsize=(15, 5))
     plt.plot(-1 * np.array(rewards))
     plt.xlabel("Episodes")
-    plt.ylabel("Total Episode Negative Rewards (log scale)")
-    plt.yscale("log")
+    plt.ylabel("Total Episode Negative Rewards")
     plt.title(title)
     plt.savefig(f"assets/plots/{file_name}_learning_rewards.png")
 

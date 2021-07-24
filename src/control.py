@@ -131,26 +131,26 @@ class SARSA(TabularControlMethod):
         self.gamma = gamma
 
     def __str__(self) -> str:
-        return f"SarsaControl_alpha{self.alpha}_gamma{self.gamma}"
+        return f"SarsaControl_alpha{self.alpha:.2f}_gamma{self.gamma:.2f}"
 
-    def learn(self, num_episodes: int) -> np.ndarray:
+    def learn(self, num_episodes: int, episode_limit: int = np.inf) -> np.ndarray:
         """
         Repeatedly runs episodes and return the list of total rewards per episode.
         """
         total_rewards = []
         for _ in range(num_episodes):
-            episode_rewards = self._run_episode()
+            episode_rewards = self._run_episode(episode_limit=episode_limit)
             total_rewards.append(episode_rewards.sum())
 
         return np.array(total_rewards)
 
-    def _run_episode(self) -> np.ndarray:
+    def _run_episode(self, episode_limit: int = np.inf) -> np.ndarray:
         state = self.environment.reset()
 
         done = False
 
         episode_rewards = []
-        while not done:
+        while not done and episode_limit > 0:
             action = self.policy.select_action(state)
             next_state, reward, done, info = self.environment.step(action)
             next_action = self.policy.select_action(next_state)
@@ -161,6 +161,8 @@ class SARSA(TabularControlMethod):
 
             episode_rewards.append(reward)
             state = next_state
+
+            episode_limit -= 1
 
         return np.array(episode_rewards)
 
