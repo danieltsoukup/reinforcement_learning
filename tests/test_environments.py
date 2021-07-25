@@ -1,12 +1,13 @@
 import pytest
 from src.environments import QueueAccessControl, Maze2D
-from src.policies import RandomPolicy
+from src.policies import RandomPolicy, TabularEpsilonGreedyPolicy
+import pandas as pd
 
 
 @pytest.fixture
 def customer_rewards():
 
-    return [1, 2, 4, 8]
+    return [5, 1]
 
 
 @pytest.fixture
@@ -14,9 +15,9 @@ def queue_env(customer_rewards):
     env = QueueAccessControl(
         num_servers=4,
         customer_rewards=customer_rewards,
-        customer_probs=[0.4, 0.2, 0.2, 0.2],
+        customer_probs=[0.4, 0.6],
         queue_size=100,
-        unlock_proba=1,
+        unlock_proba=0.2,
     )
 
     return env
@@ -107,6 +108,25 @@ def test_unlock_zero_proba(queue_env):
     queue_env.unlock_servers(0)
 
     assert queue_env.num_free_servers == queue_env.num_servers - 1
+
+
+def test_action_selection(queue_env):
+    policy = TabularEpsilonGreedyPolicy(queue_env, eps=1)
+    state = queue_env.reset()
+    record = pd.DataFrame(columns=["state", "action", "reward"], index=range(100))
+    for i in range(100):
+        action = policy.select_action(state)
+        record.loc[i, "state"] = state
+        record.loc[i, "action"] = action
+        state, reward, _, _ = queue_env.step(action)
+        record.loc[i, "reward"] = reward
+
+    record.to_csv("assets/test_plots/queue_game_play.csv")
+
+
+############
+### MAZE ###
+############
 
 
 @pytest.fixture

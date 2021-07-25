@@ -1,13 +1,14 @@
 from gym.core import Env
 from gym.spaces import Discrete, Space, Tuple as TupleSpace, Box
-from typing import Tuple, List, Dict, Any, Set
-from matplotlib.figure import Figure
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-import matplotlib.colors as mcolors
 from src.policies import TabularGreedyPolicy
+import pandas as pd
+import numpy as np
+from typing import Tuple, List, Dict, Any, Set
 from itertools import product
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
+import seaborn as sns
 
 
 class QueueAccessControl(Env):
@@ -72,7 +73,12 @@ class QueueAccessControl(Env):
 
     @property
     def state(self) -> np.ndarray:
-        return np.array([self.num_free_servers, self.current_customer])
+        return self._state_from_tuple(self.num_free_servers, self.current_customer)
+
+    def _state_from_tuple(
+        self, num_free_servers: int, current_customer: int
+    ) -> np.ndarray:
+        return np.array([num_free_servers, current_customer])
 
     def move_customer_pointer(self) -> int:
         """Move the queue pointer and return the next customer.
@@ -159,6 +165,44 @@ class QueueAccessControl(Env):
         self.current_customer_pointer = 0
 
         return self.state
+
+    def _setup_policy_df(
+        self, policy: TabularGreedyPolicy
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        accept_grid = np.zeros((self.num_servers + 1, self.num_customer_types))
+        reject_grid = np.zeros((self.num_servers + 1, self.num_customer_types))
+        for num_free_servers in range(accept_grid.shape[0]):
+            for customer in range(accept_grid.shape[1]):
+                state = self._state_from_tuple(num_free_servers, customer)
+                accept_grid[
+                    state, type(self).ACCEPT_ACTION
+                ] = policy.get_state_action_value(state, type(self).ACCEPT_ACTION)
+                reject_grid[
+                    state, type(self).REJECT_ACTION
+                ] = policy.get_state_action_value(state, type(self).REJECT_ACTION)
+
+        column_names = [f"reward_{reward}" for reward in self.customer_rewards]
+        index_names = [f"{num_free}_free" for num_free in range(self.num_servers + 1)]
+        accept_df = pd.DataFrame(
+            data=accept_grid, columns=column_names, index=index_names
+        )
+        reject_df = pd.DataFrame(
+            data=reject_grid, columns=column_names, index=index_names
+        )
+
+        return accept_df, reject_df
+
+    def plot_policy(self, policy: TabularGreedyPolicy) -> Figure:
+        accept_df, reject_df = self._setup_policy_df(policy)
+
+        fig, axs = plt.subplots(2, 1)
+        sns.heatmap(accept_df.T, annot=True, ax=axs[0])
+        axs[0].set_title("Accept Values")
+        sns.heatmap(reject_df.T, annot=True, ax=axs[1])
+        axs[1].set_title("Reject Values")
+        plt.tight_layout()
+
+        return fig
 
 
 class LineWorld(Env):

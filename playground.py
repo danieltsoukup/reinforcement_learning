@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 queue_environment = QueueAccessControl(
     num_servers=4,
     customer_rewards=[5, 1],
-    customer_probs=[0.4, 0.6],
+    customer_probs=[0.5, 0.5],
     queue_size=100,
-    unlock_proba=0.5,
+    unlock_proba=0.2,
 )
 
 lineworld_environment = LineWorld(21)
@@ -41,34 +41,37 @@ if __name__ == "__main__":
         10,
     )
 
-    tabular_policy = TabularEpsilonGreedyPolicy(environment, 0.5)
+    tabular_policy = TabularEpsilonGreedyPolicy(environment, 1)
 
-    control = SARSA(environment, tabular_policy, 0.2, 0.9)
+    control = SARSA(environment, tabular_policy, 0.1, 1)
 
     rewards = []
 
-    progress_bar = tqdm(range(50))
+    progress_bar = tqdm(range(10))
     for i in progress_bar:
-        total_rewards = control.learn(50)
+        total_rewards = control.learn(10)
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
         message = f"Mean reward {mean} (90% CI: {low: .2f} to {high: .2f}, eps: {control.policy.eps: .2f})"
         progress_bar.set_description(message, refresh=True)
 
-        tabular_policy.eps *= 0.95
+        # tabular_policy.eps *= 0.95
 
         rewards.extend(total_rewards.tolist())
 
     file_name = str(control) + "_" + str(environment)
     title = str(control) + " learning on " + str(environment)
 
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.array(rewards))
-    plt.xlabel("Episodes")
-    plt.ylabel("Total Episode Rewards")
-    plt.title(title)
-    plt.savefig(f"assets/plots/{file_name}_learning_rewards.png")
+    fig = environment.plot_policy(tabular_policy)
+    plt.savefig("assets/test_plots/queue_test.png")
+
+    # plt.figure(figsize=(15, 5))
+    # plt.plot(np.array(rewards))
+    # plt.xlabel("Episodes")
+    # plt.ylabel("Total Episode Rewards")
+    # plt.title(title)
+    # plt.savefig(f"assets/plots/{file_name}_learning_rewards.png")
 
     # tabular_policy.eps = 0
     # fig = maze.plot_policy(tabular_policy)
