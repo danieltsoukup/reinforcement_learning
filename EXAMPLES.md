@@ -15,7 +15,7 @@ The final, near optimal, action selection by the greedy policy is shown below:
 The experiment can be reproduced by running:
 
 ```bash
-python ex1_maze_montecarlo_learning.py
+python examples.py maze_montecarlo
 ```
 
 Edit the file to change the maze setup or learning parameters.
@@ -40,5 +40,5 @@ It is evident that SARSA is much faster than MC in learning and the final policy
 The experiment can be reproduced by running:
 
 ```bash
-python ex2_sarsa_hyperparameter_tuning.py
+python examples.py sarsa_hyperparameter
 ```

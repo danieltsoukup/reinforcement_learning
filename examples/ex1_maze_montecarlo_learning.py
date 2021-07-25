@@ -2,13 +2,13 @@ from src.environments import Maze2D
 from src.policies import (
     TabularEpsilonGreedyPolicy,
 )
-from src.learning import MonteCarlo
+from src.control import MonteCarlo
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-if __name__ == "__main__":
+def run_example():
 
     ### SETUP ###
 

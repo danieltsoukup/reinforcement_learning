@@ -60,7 +60,7 @@ def setup_maze() -> Maze2D:
     return maze
 
 
-if __name__ == "__main__":
+def run_example():
     maze = setup_maze()
 
     n_trials = 50
