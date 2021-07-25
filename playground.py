@@ -1,8 +1,5 @@
 from src.environments import Maze2D, QueueAccessControl, LineWorld
-from src.policies import (
-    RandomPolicy,
-    TabularEpsilonGreedyPolicy,
-)
+from src.policies import RandomPolicy, TabularEpsilonGreedyPolicy, ConstantPolicy
 from src.experimenter import evaluate_policies
 from src.control import MonteCarlo, SARSA
 import numpy as np
@@ -16,10 +13,10 @@ import matplotlib.pyplot as plt
 
 queue_environment = QueueAccessControl(
     num_servers=4,
-    customer_rewards=[100, 1],
-    customer_probs=[0.05, 0.95],
+    customer_rewards=[5, 1],
+    customer_probs=[0.4, 0.6],
     queue_size=100,
-    unlock_proba=0.2,
+    unlock_proba=0.5,
 )
 
 lineworld_environment = LineWorld(21)
@@ -33,23 +30,26 @@ maze.set_blocked_states(block_1 + block_2)
 
 if __name__ == "__main__":
 
-    environment = maze
+    environment = queue_environment
 
     evaluate_policies(
         environment,
-        {"random": RandomPolicy(environment)},
+        {
+            "random": RandomPolicy(environment),
+            "constant": ConstantPolicy(environment, environment.ACCEPT_ACTION),
+        },
         10,
     )
 
     tabular_policy = TabularEpsilonGreedyPolicy(environment, 0.5)
 
-    control = SARSA(environment, tabular_policy, 0.1, 0.5)
+    control = SARSA(environment, tabular_policy, 0.2, 0.9)
 
     rewards = []
 
     progress_bar = tqdm(range(50))
     for i in progress_bar:
-        total_rewards = control.learn(50, episode_limit=100)
+        total_rewards = control.learn(50)
 
         mean = total_rewards.mean()
         low, high = np.quantile(total_rewards, [0.05, 0.95])
@@ -64,12 +64,12 @@ if __name__ == "__main__":
     title = str(control) + " learning on " + str(environment)
 
     plt.figure(figsize=(15, 5))
-    plt.plot(-1 * np.array(rewards))
+    plt.plot(np.array(rewards))
     plt.xlabel("Episodes")
-    plt.ylabel("Total Episode Negative Rewards")
+    plt.ylabel("Total Episode Rewards")
     plt.title(title)
     plt.savefig(f"assets/plots/{file_name}_learning_rewards.png")
 
-    tabular_policy.eps = 0
-    fig = maze.plot_policy(tabular_policy)
-    fig.savefig(f"assets/plots/{file_name}_learned_policy.png")
+    # tabular_policy.eps = 0
+    # fig = maze.plot_policy(tabular_policy)
+    # fig.savefig(f"assets/plots/{file_name}_learned_policy.png")
