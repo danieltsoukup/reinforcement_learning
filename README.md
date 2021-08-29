@@ -2,7 +2,7 @@
 
 This repo explores different approaches for reinforcement learning, both policy evaluation and control problems. 
 
-See [some examples here](EXAMPLES.md).
+See [the examples in more detail](EXAMPLES.md).
 
 ## Environments
 
