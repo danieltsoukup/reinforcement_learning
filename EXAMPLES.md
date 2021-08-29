@@ -20,6 +20,8 @@ python examples.py maze_montecarlo
 
 Edit the file to change the maze setup or learning parameters.
 
+---
+
 ## Tuning SARSA hyperparameters with Optuna
 
 The goal of this experiment was to tune the `alpha` and `gamma` parameters for SARSA on Maze2D. We optimized for KPI that incorporates both the final greedy policy reward and the speed of learning for the final policy. For efficiency, we limit terminate the episodes (if necessary) after 100 steps (the optimal policy ends in 34 steps).
@@ -42,3 +44,15 @@ The experiment can be reproduced by running:
 ```bash
 python examples.py sarsa_hyperparameter
 ```
+
+---
+
+## Learning Nash Equilibria
+
+This [standalone notebook](nash_learning.ipynb) explores using gradient descent for learning optimal mixing strategies for 2-person 2-action games. 
+
+Interesting dynamics can be observed such as when the Nash-equilibrium is repelling (Bailey and Piliouras [[2018]](https://dl.acm.org/doi/10.1145/3219166.3219235)).
+
+
+
+![repelling equilibria](assets/plots/matching_pennies_sgd.png)
